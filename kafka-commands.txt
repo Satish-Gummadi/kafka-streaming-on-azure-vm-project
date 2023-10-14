@@ -1,0 +1,99 @@
+
+1) Create VM in Microsoft Azure and download the private key
+
+2) Open VM resource and Navigate to Connect >> Native SSH >> Select
+
+3) Copy our VM's public IP
+   
+   Public IP : 40.90.249.251
+
+4) Also go to 3rd Step in Native SSH and provide private key's directory in the prompt box. We will get a ssh command as follows:
+
+   ssh -i vmkeyforkafka.pem azureuser@40.90.249.251
+
+   We will use this command to connect to our VM from local terminal using private key
+
+5) open the command and run the ssh command copied in earlier step. This will open our VM
+
+6) Download kafka file using following command from our terminal
+
+   wget https://downloads.apache.org/kafka/3.5.1/kafka_2.12-3.5.1.tgz
+
+7) Unzip the downloaded file using following command
+
+   tar -xvf kafka_2.12-3.5.1.tgz
+
+8) Before we can run kafka we have to install java on our VM. So use following commands to install java
+
+   for ubuntu manchine:
+
+   sudo apt-get update
+
+   sudo apt-get install openjdk-8-jdk
+
+9) Now we can change the directory to kafka folder to run commands
+
+   cd kafka_2.12-3.5.1
+
+10) To run our zookeeper we will use the following command:
+
+    bin/zookeeper-server-start.sh config/zookeeper.properties
+
+11) To run the kafka server we need to open a new terminal, so we will open a new terminal and run step no. 4
+
+12) Before navigating to kafka folder we will run following command to increase memory of our kafka
+
+    export KAFKA_HEAP_OPTS="-Xmx256M -Xms128M"
+
+13) Now we will do step no. 9 and run the kafka server using following command
+
+    cd kafka_2.12-3.5.1
+
+    bin/kafka-server-start.sh config/server.properties
+
+14) Now our kafka server is running, but it is running on private IP. To access the server we need to change it to public.
+    For this we will close our zookeeper and kafka server, open our VM, navigate to kafka folder (step 4 and 9) and use the following command.
+    
+    sudo nano config/server.properties
+
+    This will open our properties page, where we need to change the ADVERTISED_LISTENERS settings.
+    For this go to line "#advertised.listeners=PLAINTEXT://your.host.name:9092"
+    
+    Edit it to "advertised.listeners=PLAINTEXT://40.90.249.251:9092"
+
+    Here you have to remove the comment and add your public IP in place of your.local.host
+
+    To save changes click on : "Ctrl+X" then "y" and "Enter"
+
+15) Before we can run our servers again we need to give permission to the port 9092, which is used by kafka, to our VM.
+    
+    For this navigate to VM resource page >> Networking >> Add inbount port rule
+
+    Here you have to select Source and Destination as per usage. Add value 9092 to Destination port range and then click on Add.
+
+16) Now we can start using kafka. First run the zookeeper in one terminal using step 4, 9 and 10
+
+    In another terminal run kafka server using step 4 and 13
+
+17) To create a new topic open a new terminal and repete step 4 and 9, and then use the following command.
+    Change the IP address, topic name, num of partitions and replication as per requirement. 
+
+    bin/kafka-topics.sh --create --topic topic_name --bootstrap-server 40.90.249.251:9092 --replication-factor 1 --partitions 1
+    
+18) Once the topic is created, Start our producer using the following command (you can use the same terminal)
+    Edit the topic name and IP address as per your system specs
+
+    bin/kafka-console-producer.sh --topic topic_name --bootstrap-server 40.90.249.251:9092
+
+19) We can now start our consumer in a new terminal again. Open a new terminal and repete step 4 and 9.
+    Use the following command to start consumer.
+    Edit the topic name and IP address as per your system specs
+
+    bin/kafka-console-consumer.sh --topic topic_name --bootstrap-server 40.90.249.251:9092
+
+20) Now we can write our messages to producer and we can see the messages on the consumer live.
+
+
+---------------------------------------------------------------------------------------------------------
+
+
